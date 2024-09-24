@@ -44,9 +44,9 @@ try:
 except ImportError:
     # Fall back to Python 2
     # noinspection PyCompatibility
-    from urllib2 import urlopen
+    from urllib.request import urlopen
     # noinspection PyCompatibility
-    from HTMLParser import HTMLParser
+    from html.parser import HTMLParser
     # noinspection PyCompatibility
     from urllib import urlretrieve
 
@@ -73,7 +73,7 @@ class CDSParser(HTMLParser):
 def convertpath(path):
     # OS path separator replacement funciton
     return path.replace(os.path.sep, '/')
-	
+
 def reporthook(count, block_size, total_size):
 	global start_time
 	if count == 0:
@@ -111,7 +111,7 @@ def main():
 
 	# Get the list of Fusion releases
 	# And get the last item in the ul/li tags
-	
+
 	response = urlopen(url)
 	html = response.read()
 	parser.clean()
@@ -124,43 +124,43 @@ def main():
 	response = urlopen(url)
 	html = response.read()
 	parser.feed(str(html))
-	
+
 	lastVersion = parser.HTMLDATA[-1]
-	
+
 	parser.clean()
 
 	urlcoretar = url + lastVersion + '/universal/core/com.vmware.fusion.zip.tar'
-			
+
 	# Get the main core file
 	try:
 		urlretrieve(urlcoretar, convertpath(dest + '/tools/com.vmware.fusion.zip.tar'), reporthook)
 	except:
 		print('Couldn\'t find tools')
 		return
-	
+
 	print('Extracting com.vmware.fusion.zip.tar...')
 	tar = tarfile.open(convertpath(dest + '/tools/com.vmware.fusion.zip.tar'), 'r')
 	tar.extract('com.vmware.fusion.zip', path=convertpath(dest + '/tools/'))
 	tar.close()
-	
+
 	print('Extracting files from com.vmware.fusion.zip...')
 	cdszip = zipfile.ZipFile(convertpath(dest + '/tools/com.vmware.fusion.zip'), 'r')
 	cdszip.extract('payload/VMware Fusion.app/Contents/Library/isoimages/' + ARCH + '/darwin.iso', path=convertpath(dest + '/tools/'))
 	cdszip.extract('payload/VMware Fusion.app/Contents/Library/isoimages/' + ARCH + '/darwinPre15.iso', path=convertpath(dest + '/tools/'))
 	cdszip.close()
-	
+
 	# Move the iso and sig files to tools folder
 	shutil.move(convertpath(dest + '/tools/payload/VMware Fusion.app/Contents/Library/isoimages/' + ARCH + '/darwin.iso'), convertpath(dest + '/tools/darwin.iso'))
 	shutil.move(convertpath(dest + '/tools/payload/VMware Fusion.app/Contents/Library/isoimages/' + ARCH + '/darwinPre15.iso'), convertpath(dest + '/tools/darwinPre15.iso'))
-	
+
 	# Cleanup working files and folders
 	shutil.rmtree(convertpath(dest + '/tools/payload'), True)
 	os.remove(convertpath(dest + '/tools/com.vmware.fusion.zip.tar'))
 	os.remove(convertpath(dest + '/tools/com.vmware.fusion.zip'))
-	
+
 	print('Tools retrieved successfully')
 	return
-	
-	
+
+
 if __name__ == '__main__':
     main()
